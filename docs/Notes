@@ -1,0 +1,18 @@
+1- Configura las cuentas secundarias: Asegúrate de que el rol EC2ReadOnlyRole esté presente 
+en cada cuenta a la que quieras acceder.
+
+2- Empaqueta el archivo Python en un archivo ZIP para Lambda:
+    zip -j lambda.zip lambda_function.py
+
+3- Aplicar:
+    terraform init
+    terraform plan
+    terraform apply
+
+4- Puedes ejecutar la función Lambda desde la consola de AWS o mediante AWS CLI. 
+Para pasar los identificadores de cuenta, usa el siguiente payload JSON:
+
+{
+  "account_ids": ["123456789012", "098765432109"],
+  "region": "us-east-1"
+}
