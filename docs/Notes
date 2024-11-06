@@ -1,3 +1,9 @@
+AWS_ACCESS_KEY_ID (mywizard): AKIAUND45NE57MU3BIVU
+AWS_SECRET_ACCESS_KEY (mywizard): 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
+GITHUB_TOKEN (dancb): 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
+
+Historia ChatGPT: https://chatgpt.com/c/672a39eb-2468-800a-ae65-bd728607d350
+
 1- Configura las cuentas secundarias: Asegúrate de que el rol EC2ReadOnlyRole esté presente 
 en cada cuenta a la que quieras acceder.
 
@@ -13,6 +19,6 @@ en cada cuenta a la que quieras acceder.
 Para pasar los identificadores de cuenta, usa el siguiente payload JSON:
 
 {
-  "account_ids": ["123456789012", "098765432109"],
+  "account_ids": ["303057168699"],
   "region": "us-east-1"
 }

@@ -12,7 +12,7 @@ resource "aws_iam_role" "EC2ReadOnlyRole" {
         Action = "sts:AssumeRole",
         Effect = "Allow",
         Principal = {
-          AWS = "<account_id_of_main_account>" // Aqui va el account_id_of_main_account
+          AWS = "303057168699" // Aqui va el account_id_of_main_account
         }
       }
     ]

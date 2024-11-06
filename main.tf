@@ -42,9 +42,12 @@ resource "aws_lambda_function" "list_ec2_instances" {
   handler       = "lambda_function.lambda_handler"
   runtime       = "python3.8"
 
-  role    = aws_iam_role.lambda_exec_role.arn
-  filename = "lambda.zip"
+  role         = aws_iam_role.lambda_exec_role.arn
+  filename     = "${path.module}/files/lambda_function.zip"  # Ruta al archivo ZIP en la carpeta 'files'
+  timeout      = 15 
+  memory_size  = 256
 }
+
 
 # Crear el archivo ZIP con el código de Lambda
 # Ejecuta este comando en el terminal para crear el archivo lambda.zip
