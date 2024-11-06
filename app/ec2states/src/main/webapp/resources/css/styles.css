@@ -1,0 +1,11 @@
+.instance-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.instance-table th, .instance-table td {
+    padding: 8px;
+    text-align: left;
+}
+
+.tag

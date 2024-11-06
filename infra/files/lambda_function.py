@@ -2,8 +2,13 @@ import boto3
 import json
 
 def lambda_handler(event, context):
-    account_ids = event.get("account_ids", [])
-    region = event.get("region", "us-east-1")
+    # Deserializar el JSON en el cuerpo de la solicitud
+    body = json.loads(event.get("body", "{}"))
+    
+    # Obtener los parámetros de account_ids y region
+    account_ids = body.get("account_ids", [])
+    region = body.get("region", "us-east-1")
+
     ec2_data = []
 
     for account_id in account_ids:

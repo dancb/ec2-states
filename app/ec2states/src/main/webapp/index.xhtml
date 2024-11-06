@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:p="http://primefaces.org/ui">
+
+<h:head>
+    <title>Listado de Instancias EC2</title>
+</h:head>
+<h:body>
+    <h:form>
+        <p:dataTable value="#{instanceInfoBean.instances}" var="instance" styleClass="instance-table" responsiveLayout="scroll">
+            <p:column headerText="Instance ID">
+                <h:outputText value="#{instance.instanceId}" />
+            </p:column>
+
+            <p:column headerText="State">
+                <h:outputText value="#{instance.state}" />
+            </p:column>
+
+            <p:column headerText="Tags">
+                <p:dataList value="#{instance.tags}" var="tag" styleClass="tag-list">
+                    <p:column>
+                        <h:outputText value="#{tag.key}" style="font-weight:bold" />
+                        <h:outputText value=": #{tag.value}" />
+                    </p:column>
+                </p:dataList>
+            </p:column>
+        </p:dataTable>
+    </h:form>
+</h:body>
+</html>
