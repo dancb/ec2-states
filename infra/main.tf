@@ -44,14 +44,17 @@ resource "aws_lambda_function" "list_ec2_instances" {
 
   role         = aws_iam_role.lambda_exec_role.arn
   filename     = "${path.module}/files/lambda_function.zip"  # Ruta al archivo ZIP en la carpeta 'files'
-  timeout      = 15 
+  timeout      = 20 
   memory_size  = 256
 }
 
+# Crear URL de función Lambda
+resource "aws_lambda_function_url" "lambda_function_url" {
+  function_name      = aws_lambda_function.list_ec2_instances.function_name
+  authorization_type = "NONE"  # Sin autenticación
 
-# Crear el archivo ZIP con el código de Lambda
-# Ejecuta este comando en el terminal para crear el archivo lambda.zip
-# zip -j lambda.zip lambda_function.py
+  depends_on = [aws_lambda_function.list_ec2_instances]
+}
 
 # Añadir permisos para que Lambda acceda a CloudWatch Logs
 resource "aws_iam_role_policy_attachment" "lambda_logs" {
@@ -62,4 +65,9 @@ resource "aws_iam_role_policy_attachment" "lambda_logs" {
 output "lambda_function_arn" {
   description = "ARN de la función Lambda"
   value       = aws_lambda_function.list_ec2_instances.arn
+}
+
+output "lambda_function_url" {
+  description = "URL pública de la función Lambda"
+  value       = aws_lambda_function_url.lambda_function_url.url
 }
