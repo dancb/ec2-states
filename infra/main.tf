@@ -123,3 +123,54 @@ output "manage_lambda_function_url" {
   description = "URL pública de la función Lambda para detener y terminar instancias"
   value       = aws_lambda_function_url.manage_lambda_function_url.function_url
 }
+
+# ==========================================
+# Lambda Function: analyze_ec2_instance_usage
+# ==========================================
+# Política para que Lambda acceda a CloudWatch y describa estados de instancias EC2
+resource "aws_iam_role_policy" "lambda_ec2_analyze_policy" {
+  name = "lambda_ec2_analyze_policy"
+  role = aws_iam_role.lambda_exec_role.id
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = [
+          "ec2:DescribeInstanceStatus",
+          "cloudwatch:GetMetricData"
+        ],
+        Effect = "Allow",
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+# Lambda Function para analizar el uso y costos de una instancia EC2
+resource "aws_lambda_function" "analyze_ec2_instance_usage" {
+  function_name = "analyze_ec2_instance_usage"
+  handler       = "analyze_instance_usage.lambda_handler"
+  runtime       = "python3.8"
+
+  role         = aws_iam_role.lambda_exec_role.arn
+  filename     = "${path.module}/files/analyze_instance_usage.zip"  # Ruta al archivo ZIP en la carpeta 'files'
+  timeout      = 20 
+  memory_size  = 256
+}
+
+# Crear URL de función Lambda para analyze_ec2_instance_usage
+resource "aws_lambda_function_url" "analyze_lambda_function_url" {
+  function_name      = aws_lambda_function.analyze_ec2_instance_usage.function_name
+  authorization_type = "NONE"  # Sin autenticación
+
+  depends_on = [aws_lambda_function.analyze_ec2_instance_usage]
+}
+
+output "analyze_lambda_function_arn" {
+  description = "ARN de la función Lambda para analizar el uso de la instancia y costos"
+  value       = aws_lambda_function.analyze_ec2_instance_usage.arn
+}
+output "analyze_lambda_function_url" {
+  description = "URL pública de la función Lambda para analizar el uso de la instancia y costos"
+  value       = aws_lambda_function_url.analyze_lambda_function_url.function_url
+}
