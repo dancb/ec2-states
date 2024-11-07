@@ -43,3 +43,15 @@ Para pasar los identificadores de cuenta, usa el siguiente payload JSON:
     }
   ]
 }
+
+#######################################################################
+#######################################################################
+#######################################################################
+
+1- JSON request para analyze_instance_usage function (POST)
+
+{
+  "id_instance": "i-0123456789abcdef0",
+  "region": "us-east-1"
+}
+
