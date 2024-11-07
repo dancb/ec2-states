@@ -36,19 +36,21 @@ resource "aws_iam_role_policy" "lambda_assume_policy" {
   })
 }
 
-# Lambda Function
+# ==========================================
+# Lambda Function: list_ec2_instances
+# ==========================================
 resource "aws_lambda_function" "list_ec2_instances" {
   function_name = "list_ec2_instances"
-  handler       = "lambda_function.lambda_handler"
+  handler       = "list_instances.lambda_handler"  # Cambiado para coincidir con el nuevo nombre del archivo
   runtime       = "python3.8"
 
   role         = aws_iam_role.lambda_exec_role.arn
-  filename     = "${path.module}/files/lambda_function.zip"  # Ruta al archivo ZIP en la carpeta 'files'
+  filename     = "${path.module}/files/list_instances.zip"  # Ruta al archivo ZIP en la carpeta 'files'
   timeout      = 20 
   memory_size  = 256
 }
 
-# Crear URL de función Lambda
+# Crear URL de función Lambda para list_ec2_instances
 resource "aws_lambda_function_url" "lambda_function_url" {
   function_name      = aws_lambda_function.list_ec2_instances.function_name
   authorization_type = "NONE"  # Sin autenticación
@@ -66,8 +68,58 @@ output "lambda_function_arn" {
   description = "ARN de la función Lambda"
   value       = aws_lambda_function.list_ec2_instances.arn
 }
-
 output "lambda_function_url" {
   description = "URL pública de la función Lambda"
-  value       = aws_lambda_function_url.lambda_function_url.url
+  value       = aws_lambda_function_url.lambda_function_url.function_url
+}
+
+# ==========================================
+# Lambda Function: manage_ec2_instances
+# ==========================================
+# Política para que Lambda pueda detener y terminar instancias EC2
+resource "aws_iam_role_policy" "lambda_ec2_policy" {
+  name = "lambda_ec2_policy"
+  role = aws_iam_role.lambda_exec_role.id
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = [
+          "ec2:StopInstances",
+          "ec2:TerminateInstances"
+        ],
+        Effect = "Allow",
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+# Lambda Function para detener y terminar instancias EC2
+resource "aws_lambda_function" "manage_ec2_instances" {
+  function_name = "manage_ec2_instances"
+  handler       = "manage_instances.lambda_handler"
+  runtime       = "python3.8"
+
+  role         = aws_iam_role.lambda_exec_role.arn
+  filename     = "${path.module}/files/manage_instances.zip"  # Ruta al archivo ZIP en la carpeta 'files'
+  timeout      = 20 
+  memory_size  = 256
+}
+
+# Crear URL de función Lambda para manage_ec2_instances
+resource "aws_lambda_function_url" "manage_lambda_function_url" {
+  function_name      = aws_lambda_function.manage_ec2_instances.function_name
+  authorization_type = "NONE"  # Sin autenticación
+
+  depends_on = [aws_lambda_function.manage_ec2_instances]
+}
+
+output "manage_lambda_function_arn" {
+  description = "ARN de la función Lambda para detener y terminar instancias"
+  value       = aws_lambda_function.manage_ec2_instances.arn
+}
+output "manage_lambda_function_url" {
+  description = "URL pública de la función Lambda para detener y terminar instancias"
+  value       = aws_lambda_function_url.manage_lambda_function_url.function_url
 }

@@ -22,3 +22,24 @@ Para pasar los identificadores de cuenta, usa el siguiente payload JSON:
   "account_ids": ["303057168699"],
   "region": "us-east-1"
 }
+
+
+#######################################################################
+#######################################################################
+#######################################################################
+
+1- JSON request para manage_instance function (POST)
+
+{
+  "region": "us-east-1",
+  "instances": [
+    {
+      "id_instance": "i-0123456789abcdef0",
+      "action": "terminate"
+    },
+    {
+      "id_instance": "i-0abcdef1234567890",
+      "action": "stop"
+    }
+  ]
+}
