@@ -1,3 +1,5 @@
+package com.aws.states.startup;
+
 import org.apache.catalina.Context;
 import org.apache.catalina.startup.Tomcat;
 
@@ -12,10 +14,6 @@ public class Main {
 
         // Configurar el contexto para la aplicación web
         Context context = tomcat.addWebapp("", new File("src/main/webapp").getAbsolutePath());
-
-        // Configurar FacesServlet para manejar archivos .xhtml
-        Tomcat.addServlet(context, "FacesServlet", "jakarta.faces.webapp.FacesServlet");
-        context.addServletMappingDecoded("*.xhtml", "FacesServlet");
 
         // Iniciar Tomcat
         tomcat.start();
