@@ -52,7 +52,7 @@ def lambda_handler(event, context):
                     "State": instance["State"]["Name"],
                     "InstanceType": instance_type,
                     "UptimeHours": round(uptime_hours, 2),
-                    "TotalCost": round(total_cost, 2),
+                    #"TotalCost": round(total_cost, 2),
                     "Tags": instance.get("Tags", [])
                 }
                 ec2_data.append(ec2_info)
