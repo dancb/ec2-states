@@ -1,4 +1,0 @@
-mvn clean package assembly:single
-java -jar target/embedded-tomcat-primefaces-app.jar
-java -jar target/embedded-tomcat-primefaces-app-jar-with-dependencies.jar
-
