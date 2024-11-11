@@ -1,8 +1,8 @@
 provider "aws" {
-  region = "us-east-1"  # Cambia a la región de tu preferencia
+  region = "us-east-1"
 }
 
-# Crear el rol para Lambda con permiso para asumir otros roles
+# Rol para Lambda con políticas personalizadas para cada función
 resource "aws_iam_role" "lambda_exec_role" {
   name = "lambda_exec_role"
 
@@ -20,65 +20,57 @@ resource "aws_iam_role" "lambda_exec_role" {
   })
 }
 
-# Política para permitir que Lambda asuma roles en otras cuentas
-resource "aws_iam_role_policy" "lambda_assume_policy" {
-  name = "lambda_assume_policy"
+# ==========================================
+# Lambda Function: list_ec2_instances
+# ==========================================
+
+# Política para permitir que la Lambda liste instancias EC2
+resource "aws_iam_role_policy" "lambda_list_policy" {
+  name = "lambda_list_policy"
   role = aws_iam_role.lambda_exec_role.id
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
       {
-        Action = "sts:AssumeRole",
+        Action = [
+          "ec2:DescribeInstances",
+          "ec2:DescribeInstanceStatus"
+        ],
         Effect = "Allow",
-        Resource = "arn:aws:iam::*:role/EC2ReadOnlyRole"  # Rol que debe existir en las otras cuentas
+        Resource = "*"
       }
     ]
   })
 }
 
-# ==========================================
-# Lambda Function: list_ec2_instances
-# ==========================================
 resource "aws_lambda_function" "list_ec2_instances" {
   function_name = "list_ec2_instances"
-  handler       = "list_instances.lambda_handler"  # Cambiado para coincidir con el nuevo nombre del archivo
-  runtime       = "python3.8"
-
-  role         = aws_iam_role.lambda_exec_role.arn
-  filename     = "${path.module}/files/list_instances.zip"  # Ruta al archivo ZIP en la carpeta 'files'
-  timeout      = 20 
-  memory_size  = 256
+  handler       = "list_instances.lambda_handler"
+  runtime       = "python3.9"
+  role          = aws_iam_role.lambda_exec_role.arn
+  filename      = "${path.module}/files/list_instances.zip"
+  timeout       = 20 
+  memory_size   = 256
 }
 
-# Crear URL de función Lambda para list_ec2_instances
 resource "aws_lambda_function_url" "lambda_function_url" {
   function_name      = aws_lambda_function.list_ec2_instances.function_name
-  authorization_type = "NONE"  # Sin autenticación
-
-  depends_on = [aws_lambda_function.list_ec2_instances]
+  authorization_type = "NONE"
+  depends_on         = [aws_lambda_function.list_ec2_instances]
 }
 
-# Añadir permisos para que Lambda acceda a CloudWatch Logs
-resource "aws_iam_role_policy_attachment" "lambda_logs" {
-  role       = aws_iam_role.lambda_exec_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-}
-
-output "lambda_function_arn" {
-  description = "ARN de la función Lambda"
-  value       = aws_lambda_function.list_ec2_instances.arn
-}
 output "lambda_function_url" {
-  description = "URL pública de la función Lambda"
+  description = "URL pública de la función Lambda para listar instancias EC2"
   value       = aws_lambda_function_url.lambda_function_url.function_url
 }
 
 # ==========================================
 # Lambda Function: manage_ec2_instances
 # ==========================================
+
 # Política para que Lambda pueda detener y terminar instancias EC2
-resource "aws_iam_role_policy" "lambda_ec2_policy" {
-  name = "lambda_ec2_policy"
+resource "aws_iam_role_policy" "lambda_ec2_manage_policy" {
+  name = "lambda_ec2_manage_policy"
   role = aws_iam_role.lambda_exec_role.id
   policy = jsonencode({
     Version = "2012-10-17",
@@ -95,30 +87,22 @@ resource "aws_iam_role_policy" "lambda_ec2_policy" {
   })
 }
 
-# Lambda Function para detener y terminar instancias EC2
 resource "aws_lambda_function" "manage_ec2_instances" {
   function_name = "manage_ec2_instances"
   handler       = "manage_instances.lambda_handler"
-  runtime       = "python3.8"
-
-  role         = aws_iam_role.lambda_exec_role.arn
-  filename     = "${path.module}/files/manage_instances.zip"  # Ruta al archivo ZIP en la carpeta 'files'
-  timeout      = 20 
-  memory_size  = 256
+  runtime       = "python3.9"
+  role          = aws_iam_role.lambda_exec_role.arn
+  filename      = "${path.module}/files/manage_instances.zip"
+  timeout       = 20 
+  memory_size   = 256
 }
 
-# Crear URL de función Lambda para manage_ec2_instances
 resource "aws_lambda_function_url" "manage_lambda_function_url" {
   function_name      = aws_lambda_function.manage_ec2_instances.function_name
-  authorization_type = "NONE"  # Sin autenticación
-
-  depends_on = [aws_lambda_function.manage_ec2_instances]
+  authorization_type = "NONE"
+  depends_on         = [aws_lambda_function.manage_ec2_instances]
 }
 
-output "manage_lambda_function_arn" {
-  description = "ARN de la función Lambda para detener y terminar instancias"
-  value       = aws_lambda_function.manage_ec2_instances.arn
-}
 output "manage_lambda_function_url" {
   description = "URL pública de la función Lambda para detener y terminar instancias"
   value       = aws_lambda_function_url.manage_lambda_function_url.function_url
@@ -127,7 +111,8 @@ output "manage_lambda_function_url" {
 # ==========================================
 # Lambda Function: analyze_ec2_instance_usage
 # ==========================================
-# Política para que Lambda acceda a CloudWatch y describa estados de instancias EC2
+
+# Política para que Lambda acceda a CloudWatch, describa estados de instancias EC2 y obtenga precios de instancias
 resource "aws_iam_role_policy" "lambda_ec2_analyze_policy" {
   name = "lambda_ec2_analyze_policy"
   role = aws_iam_role.lambda_exec_role.id
@@ -137,7 +122,9 @@ resource "aws_iam_role_policy" "lambda_ec2_analyze_policy" {
       {
         Action = [
           "ec2:DescribeInstanceStatus",
-          "cloudwatch:GetMetricData"
+          "ec2:DescribeInstances",
+          "cloudwatch:GetMetricData",
+          "pricing:GetProducts"
         ],
         Effect = "Allow",
         Resource = "*"
@@ -146,31 +133,31 @@ resource "aws_iam_role_policy" "lambda_ec2_analyze_policy" {
   })
 }
 
-# Lambda Function para analizar el uso y costos de una instancia EC2
 resource "aws_lambda_function" "analyze_ec2_instance_usage" {
   function_name = "analyze_ec2_instance_usage"
   handler       = "analyze_instance_usage.lambda_handler"
-  runtime       = "python3.8"
-
-  role         = aws_iam_role.lambda_exec_role.arn
-  filename     = "${path.module}/files/analyze_instance_usage.zip"  # Ruta al archivo ZIP en la carpeta 'files'
-  timeout      = 20 
-  memory_size  = 256
+  runtime       = "python3.9"
+  role          = aws_iam_role.lambda_exec_role.arn
+  filename      = "${path.module}/files/analyze_instance_usage.zip"
+  timeout       = 20 
+  memory_size   = 256
 }
 
-# Crear URL de función Lambda para analyze_ec2_instance_usage
 resource "aws_lambda_function_url" "analyze_lambda_function_url" {
   function_name      = aws_lambda_function.analyze_ec2_instance_usage.function_name
-  authorization_type = "NONE"  # Sin autenticación
-
-  depends_on = [aws_lambda_function.analyze_ec2_instance_usage]
+  authorization_type = "NONE"
+  depends_on         = [aws_lambda_function.analyze_ec2_instance_usage]
 }
 
-output "analyze_lambda_function_arn" {
-  description = "ARN de la función Lambda para analizar el uso de la instancia y costos"
-  value       = aws_lambda_function.analyze_ec2_instance_usage.arn
-}
 output "analyze_lambda_function_url" {
   description = "URL pública de la función Lambda para analizar el uso de la instancia y costos"
   value       = aws_lambda_function_url.analyze_lambda_function_url.function_url
+}
+
+# ==========================================
+# Permisos para CloudWatch Logs en todas las funciones Lambda
+# ==========================================
+resource "aws_iam_role_policy_attachment" "lambda_logs" {
+  role       = aws_iam_role.lambda_exec_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
