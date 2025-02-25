@@ -24,7 +24,3 @@ This repository contains Terraform code to deploy three AWS Lambda functions des
   - Terminate instances.
   - *Pending*: Start instances functionality.
 
-## Next Steps
-- Deploy the Terraform code to create the Lambda functions.
-- Configure appropriate IAM roles and permissions for EC2 access.
-- Test each Lambda function with sample EC2 instances.
